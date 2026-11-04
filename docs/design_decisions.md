@@ -133,8 +133,8 @@ Performance testing was conducted using a Parquet dataset containing 100,000 ord
 
 - Dataset size: 100,000 records.
 - File size: Approximately 1.65 MB.
-- Read time: Approximately 1.5993 seconds.
-- Read throughput: Approximately 62,528 records per second.
+- Read time: Approximately  0.9850 seconds.
+- Read throughput: Approximately 101,519 records per second.
 
 ### Database insertion benchmark
 
@@ -142,8 +142,8 @@ A controlled benchmark compared individual database inserts with batch insertion
 
 | Method | Records | Execution Time |
 |---|---:|---:|
-| Individual insertion | 10,000 | 7.4610 seconds |
-| Batch insertion | 10,000 | 3.2894 seconds |
+| Individual insertion | 10,000 | 6.6174 seconds |
+| Batch insertion | 10,000 | 3.4431 seconds |
 
 Batch insertion was approximately **55.91% faster** in this benchmark.
 

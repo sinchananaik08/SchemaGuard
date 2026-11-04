@@ -328,8 +328,8 @@ A reproducible synthetic dataset containing 100,000 order records was used for p
 | Dataset | orders_large.parquet |
 | Records | 100,000 |
 | File size | Approximately 1.65 MB |
-| Reading time | 1.5993 seconds |
-| Reading speed | 62,528 rows/second |
+| Reading time | 0.9850 seconds |
+| Reading speed | 101,519 rows/second |
 
 ### Database insertion benchmark
 
@@ -339,9 +339,9 @@ Two insertion approaches were compared using the same 10,000 records and separat
 |---|---:|---:|
 | Records inserted | 10,000 | 10,000 |
 | Batch size | 1 | 500 |
-| Execution time | 7.4610 seconds | 3.2894 seconds |
+| Execution time | 6.6174 seconds | 3.4431 seconds |
 
-**Measured batch insertion improvement: approximately 55.91%.**
+**Measured batch insertion improvement: approximately 47.97%.**
 
 ### Optimization implemented
 

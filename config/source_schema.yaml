@@ -1,0 +1,63 @@
+
+customers:
+  description: "Customer master data"
+  primary_key: customer_id
+
+  columns:
+    customer_id:
+      type: integer
+      nullable: false
+
+    customer_name:
+      type: string
+      nullable: false
+
+    email:
+      type: string
+      nullable: false
+
+    city:
+      type: string
+      nullable: true
+
+
+orders:
+  description: "Customer order transactions"
+  primary_key: order_id
+
+  foreign_keys:
+    customer_id:
+      references: customers.customer_id
+
+  columns:
+    order_id:
+      type: string
+      nullable: false
+
+    customer_id:
+      type: integer
+      nullable: false
+
+    order_date:
+      type: timestamp
+      nullable: false
+
+    amount:
+      type: double
+      nullable: false
+      minimum: 0
+
+    status:
+      type: string
+      nullable: false
+      allowed_values:
+        - Pending
+        - Shipped
+        - Delivered
+        - Cancelled
+
+    discount:
+      type: double
+      nullable: true
+      minimum: 0
+      maximum: 100

@@ -2,3 +2,4 @@ duckdb
 pyarrow
 PyYAML
 pytest
+pandas

@@ -1,0 +1,236 @@
+[
+    {
+        "record": {
+            "order_id": "ORD012",
+            "customer_id": 102,
+            "amount": -200.0,
+            "status": "Pending",
+            "order_date": "2026-10-25 00:00:00",
+            "discount": 5.0
+        },
+        "errors": [
+            "Order amount cannot be negative."
+        ]
+    },
+    {
+        "record": {
+            "order_id": "ORD013",
+            "customer_id": 999,
+            "amount": 300.0,
+            "status": "Delivered",
+            "order_date": "2026-10-26 00:00:00",
+            "discount": 0.0
+        },
+        "errors": [
+            "Customer ID 999 does not exist."
+        ]
+    },
+    {
+        "record": {
+            "order_id": "ORD014",
+            "customer_id": 103,
+            "amount": 700.0,
+            "status": "Processing",
+            "order_date": "2026-10-26 00:00:00",
+            "discount": 0.0
+        },
+        "errors": [
+            "Invalid order status: Processing"
+        ]
+    },
+    {
+        "record": {
+            "order_id": "ORD012",
+            "customer_id": 102,
+            "amount": -200.0,
+            "status": "Pending",
+            "order_date": "2026-10-25 00:00:00",
+            "discount": 5.0
+        },
+        "errors": [
+            "Order amount cannot be negative."
+        ]
+    },
+    {
+        "record": {
+            "order_id": "ORD013",
+            "customer_id": 999,
+            "amount": 300.0,
+            "status": "Delivered",
+            "order_date": "2026-10-26 00:00:00",
+            "discount": 0.0
+        },
+        "errors": [
+            "Customer ID 999 does not exist."
+        ]
+    },
+    {
+        "record": {
+            "order_id": "ORD014",
+            "customer_id": 103,
+            "amount": 700.0,
+            "status": "Processing",
+            "order_date": "2026-10-26 00:00:00",
+            "discount": 0.0
+        },
+        "errors": [
+            "Invalid order status: Processing"
+        ]
+    },
+    {
+        "record": {
+            "order_id": "ORD012",
+            "customer_id": 102,
+            "amount": -200.0,
+            "status": "Pending",
+            "order_date": "2026-10-25 00:00:00",
+            "discount": 5.0
+        },
+        "errors": [
+            "Order amount cannot be negative."
+        ]
+    },
+    {
+        "record": {
+            "order_id": "ORD013",
+            "customer_id": 999,
+            "amount": 300.0,
+            "status": "Delivered",
+            "order_date": "2026-10-26 00:00:00",
+            "discount": 0.0
+        },
+        "errors": [
+            "Customer ID 999 does not exist."
+        ]
+    },
+    {
+        "record": {
+            "order_id": "ORD014",
+            "customer_id": 103,
+            "amount": 700.0,
+            "status": "Processing",
+            "order_date": "2026-10-26 00:00:00",
+            "discount": 0.0
+        },
+        "errors": [
+            "Invalid order status: Processing"
+        ]
+    },
+    {
+        "record": {
+            "order_id": "ORD012",
+            "customer_id": 102,
+            "amount": -200.0,
+            "status": "Pending",
+            "order_date": "2026-10-25 00:00:00",
+            "discount": 5.0
+        },
+        "errors": [
+            "Order amount cannot be negative."
+        ]
+    },
+    {
+        "record": {
+            "order_id": "ORD013",
+            "customer_id": 999,
+            "amount": 300.0,
+            "status": "Delivered",
+            "order_date": "2026-10-26 00:00:00",
+            "discount": 0.0
+        },
+        "errors": [
+            "Customer ID 999 does not exist."
+        ]
+    },
+    {
+        "record": {
+            "order_id": "ORD014",
+            "customer_id": 103,
+            "amount": 700.0,
+            "status": "Processing",
+            "order_date": "2026-10-26 00:00:00",
+            "discount": 0.0
+        },
+        "errors": [
+            "Invalid order status: Processing"
+        ]
+    },
+    {
+        "record": {
+            "order_id": "ORD012",
+            "customer_id": 102,
+            "amount": -200.0,
+            "status": "Pending",
+            "order_date": "2026-10-25 00:00:00",
+            "discount": 5.0
+        },
+        "errors": [
+            "Order amount cannot be negative."
+        ]
+    },
+    {
+        "record": {
+            "order_id": "ORD013",
+            "customer_id": 999,
+            "amount": 300.0,
+            "status": "Delivered",
+            "order_date": "2026-10-26 00:00:00",
+            "discount": 0.0
+        },
+        "errors": [
+            "Customer ID 999 does not exist."
+        ]
+    },
+    {
+        "record": {
+            "order_id": "ORD014",
+            "customer_id": 103,
+            "amount": 700.0,
+            "status": "Processing",
+            "order_date": "2026-10-26 00:00:00",
+            "discount": 0.0
+        },
+        "errors": [
+            "Invalid order status: Processing"
+        ]
+    },
+    {
+        "source_file": "quarantine_test_batch.parquet",
+        "record": {
+            "order_id": "ORD302",
+            "amount": -200,
+            "status": "Pending"
+        },
+        "errors": [
+            "Order amount cannot be negative."
+        ],
+        "quarantined_at": "2026-11-02T08:14:25.165805+00:00"
+    },
+    {
+        "source_file": "quarantine_test_batch.parquet",
+        "record": {
+            "order_id": "ORD303",
+            "amount": 300,
+            "status": "Processing"
+        },
+        "errors": [
+            "Invalid order status: Processing"
+        ],
+        "quarantined_at": "2026-11-02T08:14:25.165805+00:00"
+    },
+    {
+        "source_file": "orders_batch_011.parquet",
+        "record": {
+            "order_id": "ORD052",
+            "customer_id": 102,
+            "amount": -200.0,
+            "status": "Pending",
+            "order_date": "2026-11-02 00:00:00",
+            "discount": 5.0
+        },
+        "errors": [
+            "Order amount cannot be negative."
+        ],
+        "quarantined_at": "2026-11-02T10:29:40.883946+00:00"
+    }
+]

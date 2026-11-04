@@ -1,0 +1,37 @@
+
+approved_changes:
+  add_nullable_column:
+    allowed: true
+    description: "Allow only explicitly approved nullable columns"
+    columns:
+      orders:
+        payment_method:
+          type: string
+          nullable: true
+
+  integer_widening:
+    allowed: true
+    from: integer
+    to: bigint
+    description: "Allow safe integer type widening"
+
+rejected_changes:
+  remove_required_column:
+    allowed: true
+    description: "Reject removal of required columns"
+
+  incompatible_type_change:
+    allowed: true
+    description: "Reject incompatible data type changes"
+
+  add_required_column:
+    allowed: true
+    description: "Reject new required columns without a default value"
+
+  rename_column:
+    allowed: true
+    description: "Reject unapproved column renaming"
+
+  unexpected_column:
+    allowed: true
+    description: "Reject columns not covered by approved evolution rules"

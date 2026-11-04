@@ -16,7 +16,9 @@ The pipeline supports:
 - Quarantine management.
 - Data transformation.
 - Target database publishing.
+- Source-to-target verification and reconciliation.
 - Audit logging and batch tracking.
+- Idempotent batch processing and retry of failed batches.
 
 ## 2. System Architecture Diagram
 
@@ -45,11 +47,16 @@ flowchart TD
 
     J --> K["Publish Transformed Records to DuckDB"]
 
-    K --> L["Mark Batch as Processed"]
+    K --> V["Source-to-Target Verification"]
+    V --> W{"Verification Passed?"}
+
+    W -->|Yes| L["Mark Batch as Processed"]
+    W -->|No| X["Mark Run as Failed"]
 
     Q --> M["Audit Logging"]
     R --> M
-    K --> M
+    L --> M
+    X --> M
     S --> M
 
     N[("Source Schema YAML<br/>Evolution Rules YAML")] -.-> E
@@ -59,9 +66,11 @@ flowchart TD
 
     style A fill:#dbeafe,stroke:#2563eb,color:#111827
     style K fill:#dcfce7,stroke:#16a34a,color:#111827
+    style V fill:#dbeafe,stroke:#2563eb,color:#111827
     style Q fill:#fee2e2,stroke:#dc2626,color:#111827
     style R fill:#fee2e2,stroke:#dc2626,color:#111827
     style S fill:#fef3c7,stroke:#d97706,color:#111827
+    style X fill:#fee2e2,stroke:#dc2626,color:#111827
 ```
 
 ## 3. Architecture Components
@@ -73,11 +82,13 @@ Incoming data is supplied as Parquet files.
 The project contains two primary source entities:
 
 **Customers**
+
 - Stores customer master information.
 - Contains customer identifiers and customer details.
 - Used to validate order references.
 
 **Orders**
+
 - Stores customer order transactions.
 - Each order is identified by a unique order ID.
 - References a customer through `customer_id`.
@@ -94,6 +105,7 @@ The configuration layer maintains expected schemas and permitted schema changes.
 **File: `config/source_schema.yaml`**
 
 Defines:
+
 - Expected columns.
 - Data types.
 - Nullability.
@@ -104,6 +116,7 @@ Defines:
 **File: `config/evolution_rules.yaml`**
 
 Defines:
+
 - Approved nullable column additions.
 - Approved safe integer type widening.
 - Rejected incompatible schema changes.
@@ -125,7 +138,9 @@ Responsibilities:
 - Record processed batch information.
 - Prevent unintended reprocessing of identical file contents.
 
-If the same file content has already been processed, the pipeline skips it.
+If the same file content has already been processed successfully, the pipeline skips it.
+
+Failed batches are not marked as successfully processed, allowing them to be retried after correction.
 
 ### 3.4 Schema Detection
 
@@ -190,7 +205,7 @@ The module validates:
 - Discount values.
 - Customer references.
 
-Valid and invalid records are separated.
+Valid and invalid records are separated so that invalid records do not get published into the target database.
 
 ### 3.8 Quarantine Management
 
@@ -217,6 +232,8 @@ Rejected records retain:
 - Validation errors.
 - Quarantine timestamp.
 
+Duplicate rejected records are prevented from being added again based on the source filename and order ID.
+
 This supports traceability and investigation of data quality issues.
 
 ### 3.9 Data Transformation
@@ -239,11 +256,42 @@ The calculated value is rounded to two decimal places.
 
 Validated and transformed records are published into DuckDB.
 
+The target orders table includes:
+
+- Original order fields.
+- Approved optional `payment_method` field.
+- Derived `amount_after_discount` field.
+
 DuckDB provides a local analytical storage layer for querying processed order data.
 
-The target database is maintained in the project database directory.
+The loader uses batch insertion through DuckDB's `executemany()` method to improve database insertion performance.
 
-### 3.11 Audit Logging
+Database transactions are used during publishing to help prevent partial database writes.
+
+Duplicate order IDs are not inserted again because the target table uses `order_id` as its primary key.
+
+### 3.11 Source-to-Target Verification and Reconciliation
+
+**Implementation:** `verify_orders_in_database()` in `src/loader.py` and reconciliation logic in `src/pipeline.py`.
+
+After publishing transformed records into DuckDB, the pipeline verifies that the published records match the expected transformed source records.
+
+The verification checks:
+
+- Whether expected order IDs exist in the target database.
+- Customer IDs.
+- Original order amounts.
+- Discount values.
+- Order statuses.
+- Calculated amounts after discount.
+
+The pipeline also checks record-count reconciliation and amount totals to identify differences between incoming, accepted, rejected, and published records.
+
+If source-to-target verification succeeds, the batch can be marked as processed.
+
+If verification fails, the pipeline records the run as failed rather than marking the batch as successfully processed.
+
+### 3.12 Audit Logging
 
 **Implementation:** `src/pipeline.py`
 
@@ -258,6 +306,8 @@ The audit information includes:
 - Records received.
 - Records accepted.
 - Records rejected.
+- Records published.
+- Records already existing.
 - Processing status.
 - Failure reason, where applicable.
 
@@ -268,6 +318,8 @@ Audit records are stored in:
 Processed batch information is maintained in:
 
 `database/processed_batches.json`
+
+Audit logging is performed after the pipeline execution so that both successful and failed runs can be recorded.
 
 ## 4. End-to-End Processing Workflow
 
@@ -283,8 +335,11 @@ The pipeline follows these steps:
 8. Individual records are checked against business rules.
 9. Invalid records are saved separately with rejection reasons.
 10. Valid records undergo transformation.
-11. Transformed records are published into DuckDB.
-12. Batch tracking and audit information are updated.
+11. Transformed records are published into DuckDB using batch insertion.
+12. Record counts and amount totals are reconciled.
+13. Published records are verified against the expected transformed source records.
+14. The batch is marked as processed only after successful verification.
+15. Audit information is saved with the processing status and record counts.
 
 ## 5. Storage Architecture
 
@@ -311,6 +366,8 @@ The pipeline follows these steps:
 
 **Idempotency:** SHA-256 file hashes are used to identify previously processed batches.
 
+**Data correctness:** Published records are checked against expected transformed source values.
+
 **Maintainability:** The codebase is organized into source, configuration, scripts, and test directories.
 
 ## 7. Deployment Environment
@@ -327,10 +384,26 @@ No external cloud infrastructure or credentials are required.
 
 This local implementation provides a reproducible environment for demonstrating schema drift detection, schema evolution, data quality validation, quarantine management, and analytical data publishing.
 
-## 8. Current Architecture Limitations
+## 8. Performance and Optimization
+
+The project includes performance benchmarking for:
+
+- Reading a 100,000-record Parquet dataset.
+- Comparing individual database insertion with batch insertion.
+
+The recorded Parquet reading benchmark achieved approximately 62,528 records per second.
+
+The controlled database insertion benchmark showed that batch insertion was approximately 55.91% faster than individual insertion for 10,000 records.
+
+The production loader uses a batch size of 1,000 records.
+
+These benchmarks measure individual operations and do not represent the performance of the complete end-to-end pipeline.
+
+## 9. Current Architecture Limitations
 
 - The solution uses local file storage and DuckDB rather than distributed cloud infrastructure.
-- The performance benchmark currently measures Parquet reading rather than complete end-to-end processing.
+- The performance benchmark measures Parquet reading and controlled database insertion rather than complete end-to-end processing.
 - Some physical Parquet data types cannot reliably distinguish logical integer and bigint types.
 - Full restart recovery and historical backfill have not been completely validated.
-- Target database reconciliation and additional integration testing remain areas for improvement.
+- Concurrent processing and production-scale failure recovery require further testing.
+- Additional integration testing is required for larger workloads.

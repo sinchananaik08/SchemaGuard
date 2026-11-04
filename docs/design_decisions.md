@@ -10,7 +10,7 @@ The solution prioritizes correctness, maintainability, reproducibility, and data
 
 | Technology | Reason for Selection | Trade-off |
 |---|---|---|
-| Python | Simple and widely used for data engineering | May require optimization for very large workloads |
+| Python | Simple and widely used in data engineering | May require optimization for very large workloads |
 | PyArrow | Efficient Parquet reading and schema inspection | Requires understanding of Arrow data types |
 | DuckDB | Lightweight analytical database that runs locally | Not intended as a complete distributed database |
 | YAML | Separates schema definitions and evolution rules from code | Configuration must be validated carefully |
@@ -79,7 +79,7 @@ SchemaGuard calculates SHA-256 hashes of incoming files to identify previously p
 
 **Trade-off:** If a single record changes, the entire file hash changes. The updated batch is therefore treated as a different input.
 
-The current implementation does not provide a complete transactional recovery mechanism for every possible interruption during publishing.
+The current implementation supports duplicate-batch detection and retrying batches that previously failed. However, complete transactional recovery for every possible interruption during publishing is not yet implemented.
 
 ## 7. Data Transformation
 
@@ -127,30 +127,46 @@ Separate test generators cover schema changes, missing columns, incompatible dat
 
 ## 10. Performance Considerations
 
-A Parquet read benchmark was performed using a dataset of 100,000 order records.
+Performance testing was conducted using a Parquet dataset containing 100,000 order records.
 
-Recorded results:
+### Parquet reading benchmark
 
 - Dataset size: 100,000 records.
 - File size: Approximately 1.65 MB.
-- Read time: Approximately 1.77 seconds.
-- Read throughput: Approximately 56,416 records per second.
+- Read time: Approximately 1.5993 seconds.
+- Read throughput: Approximately 62,528 records per second.
 
-This benchmark measures Parquet reading only, not complete pipeline execution.
+### Database insertion benchmark
 
-Further optimization could include batch-oriented database inserts, efficient columnar operations, and avoiding unnecessary repeated file reads.
+A controlled benchmark compared individual database inserts with batch insertion using DuckDB.
 
-Any optimization should be benchmarked against the existing implementation and must preserve accurate inserted-row counts and idempotency.
+| Method | Records | Execution Time |
+|---|---:|---:|
+| Individual insertion | 10,000 | 7.4610 seconds |
+| Batch insertion | 10,000 | 3.2894 seconds |
+
+Batch insertion was approximately **55.91% faster** in this benchmark.
+
+The target loader uses DuckDB's `executemany()` method to insert records in batches of 1,000. The controlled insertion benchmark used a batch size of 500 records.
+
+These benchmarks measure Parquet reading and database insertion separately, not the complete end-to-end pipeline.
+
+**Design decision:** Use batch-oriented database insertion instead of inserting each record individually.
+
+**Benefit:** Reduces individual database insertion calls and improves insertion performance.
+
+**Trade-off:** Batch size should be selected carefully to balance memory usage and performance.
 
 ## 11. Known Limitations
 
 - The solution currently uses local file storage and DuckDB.
 - Full end-to-end performance has not yet been benchmarked.
-- Zero-row Parquet handling requires additional verification.
+- Zero-row Parquet file handling requires additional verification.
 - Restart recovery and historical backfill are not fully implemented or demonstrated.
-- Target database reconciliation requires additional verification.
+- Source-to-target verification currently checks selected fields rather than every column.
+- Reconciliation is implemented for record counts and amounts, but broader historical reconciliation is not yet available.
 - Some logical integer type distinctions may not be represented distinctly in Parquet.
-- Additional integration testing is required beyond the existing unit tests.
+- Additional end-to-end integration testing is required beyond the existing automated tests.
 
 ## 12. Future Improvements
 
@@ -161,9 +177,9 @@ Potential improvements include:
 3. More advanced pipeline monitoring and reporting.
 4. Stronger transactional recovery and restart handling.
 5. Explicit historical backfill support.
-6. Automated source-to-target reconciliation reports.
+6. Expanded source-to-target reconciliation across all columns.
 7. Expanded end-to-end integration testing.
-8. Performance optimization of database publishing.
+8. Further performance testing and batch-size optimization.
 
 ## 13. Conclusion
 

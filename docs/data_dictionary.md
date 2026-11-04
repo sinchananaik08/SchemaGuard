@@ -56,24 +56,26 @@ The project processes two primary source entities: Customers and Orders.
 - Discount must be between 0 and 100.
 - Required fields must not contain null values.
 
+**Implementation note:** The source schema defines `order_date` as non-nullable. However, the current data-quality validator treats a missing order date as optional for backward compatibility. This is a known validation inconsistency.
+
 ## 4. Target Orders Entity
 
 **Description:** Stores validated and transformed order records in DuckDB.
 
 The target table is created and managed by `src/loader.py`.
 
-| Column | Description |
-|---|---|
-| order_id | Unique order identifier |
-| customer_id | Customer reference |
-| order_date | Order timestamp |
-| amount | Original order amount |
-| status | Order status |
-| discount | Discount percentage |
-| amount_after_discount | Calculated order amount after discount |
-| payment_method | Approved optional schema-evolution field, when supplied |
+| Column | Data Type | Description |
+|---|---|---|
+| order_id | VARCHAR | Unique order identifier and primary key |
+| customer_id | INTEGER | Customer reference |
+| order_date | TIMESTAMP | Order timestamp |
+| amount | DOUBLE | Original order amount |
+| status | VARCHAR | Order status |
+| discount | DOUBLE | Discount percentage |
+| payment_method | VARCHAR | Approved optional schema-evolution field, when supplied |
+| amount_after_discount | DOUBLE | Calculated order amount after discount |
 
-**Note:** Confirm the complete target table definition against the actual DuckDB table before final submission.
+The target table contains the original order fields, the approved optional `payment_method` field, and the derived `amount_after_discount` field.
 
 ## 5. Derived Fields
 
@@ -145,6 +147,8 @@ Important fields include:
 - `records_received`
 - `records_accepted`
 - `records_rejected`
+- `records_published`
+- `records_already_existing`
 - `status`
 - `failure_reason`
 

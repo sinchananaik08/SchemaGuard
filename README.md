@@ -66,9 +66,6 @@ SchemaGuard/
 │   ├── architecture.md
 │   └── design_decisions.md
 │
-├── logs/
-├── reports/
-│
 ├── scripts/
 │   ├── benchmark.py
 │   ├── check_database.py
@@ -100,6 +97,8 @@ SchemaGuard/
 │
 ├── requirements.txt
 └── README.md
+
+
 ```
 
 ## 5. Source Entities and Business Rules
@@ -252,6 +251,15 @@ Run the following script to inspect stored order records in the DuckDB database:
 
 ```powershell
 python scripts/check_database.py
+```
+
+### Parquet File Inspection
+
+Run the following script to inspect the schema, columns, and records in a Parquet file:
+
+```powershell
+python scripts/inspect_data.py
+```
 
 ## 11. Automated Testing
 
@@ -355,7 +363,10 @@ The benchmark is not a measurement of the complete end-to-end pipeline.
 
 - The implementation uses local Parquet files and DuckDB rather than a cloud-based distributed processing platform.
 - The performance benchmark measures Parquet reading and controlled database insertion, not the complete pipeline.
+- Source-to-target verification currently checks selected fields rather than every column.
+- Reconciliation covers record counts and amount totals; broader historical reconciliation is not yet available.
 - Some schema type distinctions, such as integer and bigint, may not be distinguishable from the physical Parquet representation.
+- Zero-row Parquet file handling requires additional verification.
 - Restart recovery and historical backfill have not been fully validated under production-scale failure scenarios.
 - Further integration testing is required for concurrent processing and larger workloads.
 
